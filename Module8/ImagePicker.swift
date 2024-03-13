@@ -17,7 +17,7 @@ class PhotosState: ObservableObject {
                     case .failure(let error):
                         print(error.localizedDescription)
                     case .success(let image):
-                        self.image = image
+                    self.images.append(image!)
                 }
             }
         }
@@ -25,8 +25,41 @@ class PhotosState: ObservableObject {
 
     @Published var fileURL: URL?
 
-    @Published var image: Image?
+    @Published var images: [Image] = []
 
+}
+
+struct DisplayImageView: View {
+    @ObservedObject var state: PhotosState {
+        didSet {
+            
+        }
+    }
+    
+    var body: some View {
+        ZStack(alignment: Alignment.topTrailing) {
+            if let lastImage = state.images.last(where: { _ in true }) {
+                lastImage
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(maxWidth: .infinity)
+                    .ignoresSafeArea()
+            }
+            
+            state.images.count > 1 ?
+                Button(action: {
+                    
+                }, label: {
+                    Color.white
+                        .overlay(Text("History"))
+                })
+                .frame(width: 100, height: 60)
+                .alignmentGuide(HorizontalAlignment.trailing) { _ in
+                    return UIScreen.main.bounds.width - 170
+                }
+            : nil
+        }
+    }
 }
 
 struct ImagePicker: View {
@@ -35,15 +68,18 @@ struct ImagePicker: View {
     @State var presentFiles = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            Color.green
-                .overlay(
-            state.image?
-                .resizable()
-                .aspectRatio(1, contentMode: .fit)
-            )
+        VStack(spacing: 5) {
+            if state.images.count > 0 {
+                DisplayImageView(state: state)
+            } else {
+                Color.white
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+                
+                    
+                
 
-            HStack(spacing: 0) {
+            HStack(spacing: 5) {
                 Button {
                     presentPhotos = true
                 } label: {
